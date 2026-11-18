@@ -10,7 +10,7 @@ HTTP(S)-запросов к указанному адресу, дожидает�
 ## Запуск
 
 ```bash
-git clone https://github.com/<user>/netspeed.git
+git clone https://github.com/matrixenchant/netspeed-py
 cd netspeed
 python netspeed.py https://proof.ovh.net/files/10Mb.dat
 ```
