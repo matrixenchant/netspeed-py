@@ -364,9 +364,15 @@ class RunTest(LocalServerMixin, unittest.TestCase):
         self.assertEqual(len(self.server.seen), 2)  # exactly N requests
         self.assertIn("Content type:        image (image/png)", out)
         self.assertIn("Successful requests: 2/2", out)
-        self.assertIn(f"Total downloaded:    {netspeed.format_bytes(2 * len(BODY))}", out)
         self.assertIn("median", out)
         self.assertIn("Speed per request, Mbit/s (overall", out)  # chart
+        # the result block comes after diagnostics and the chart, framed by rules
+        diagnostics, result = out.split("DOWNLOAD SPEED:")
+        self.assertIn("Diagnostics:", diagnostics)
+        self.assertIn("Speed per request, Mbit/s", diagnostics)
+        self.assertIn("Avg request time:", result)
+        self.assertIn(f"Total downloaded:  {netspeed.format_bytes(2 * len(BODY))}", result)
+        self.assertTrue(out.rstrip().endswith(netspeed.RULE))
 
     def test_no_chart(self):
         _, out, _ = run_main([f"{self.base}/ok", "-n", "1", "--no-chart"])

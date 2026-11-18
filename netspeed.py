@@ -40,7 +40,7 @@ def _can_print(chars: str) -> bool:
         return False
 
 
-FULL, EMPTY, AXIS = ("█", "░", "│") if _can_print("█░│") else ("#", ".", "|")
+FULL, EMPTY, AXIS, RULE = ("█", "░", "│", "═") if _can_print("█░│═") else ("#", ".", "|", "=")
 
 
 class Result(NamedTuple):
@@ -319,29 +319,43 @@ def run(args: argparse.Namespace) -> int:
 
     # types come from the responses; if the server varied, list every distinct one
     types = list(dict.fromkeys(r.content_type for r in results))
-    print(f"Content type:        {', '.join(describe_content(t, args.url) for t in types)}")
-    print(f"Successful requests: {len(results)}/{args.count}")
+    print("Diagnostics:")
+    print(f"  Successful requests: {len(results)}/{args.count}")
+    print(f"  Content type:        {', '.join(describe_content(t, args.url) for t in types)}")
     print(
-        f"Request time:        avg {total_time / len(results):.3f} s"
-        f"  (min {min(times):.3f} / median {statistics.median(times):.3f} / max {max(times):.3f})"
+        f"  Request time:        min {min(times):.3f} / median {statistics.median(times):.3f}"
+        f" / max {max(times):.3f} s"
     )
-    print(f"Average TTFB:        {total_ttfb / len(results):.3f} s")
-    print(f"Total downloaded:    {format_bytes(total_bytes)} ({total_bytes} bytes)")
-    print(f"Download speed:      {overall:.2f} Mbit/s ({overall / 8:.2f} MB/s)")
+    print(f"  Average TTFB:        {total_ttfb / len(results):.3f} s")
     print(
-        f"Speed per request:   median {statistics.median(ok_speeds):.2f} Mbit/s"
-        f"  (min {min(ok_speeds):.2f} / max {max(ok_speeds):.2f})"
+        f"  Speed per request:   median {statistics.median(ok_speeds):.2f}"
+        f" / min {min(ok_speeds):.2f} / max {max(ok_speeds):.2f} Mbit/s"
     )
-    print(f"Transfer speed:      {transfer:.2f} Mbit/s (excluding TTFB)")
+    print(f"  Transfer speed:      {transfer:.2f} Mbit/s (excluding TTFB)")
     if any(t in ("text/html", "application/xhtml+xml") for t in types):
         print(
-            "\nNote: this is an HTML page - only the document itself is downloaded "
-            "(no images, CSS, JS).\n      It is usually small, so the result reflects "
+            "\n  Note: this is an HTML page - only the document itself is downloaded "
+            "(no images, CSS, JS).\n        It is usually small, so the result reflects "
             "latency more than bandwidth."
         )
     if not args.no_chart:
         print_chart(speeds, overall)
+    print_result(overall, total_time / len(results), total_bytes)
     return EXIT_OK if len(results) == args.count else EXIT_PARTIAL
+
+
+def print_result(speed: float, avg_time: float, total_bytes: int) -> None:
+    """The main answer, framed and printed last so it is not lost among the diagnostics."""
+    lines = [
+        f"DOWNLOAD SPEED:    {speed:.2f} Mbit/s  ({speed / 8:.2f} MB/s)",
+        f"Avg request time:  {avg_time:.3f} s",
+        f"Total downloaded:  {format_bytes(total_bytes)} ({total_bytes} bytes)",
+    ]
+    rule = RULE * max(len(line) for line in lines)
+    print(f"\n{rule}")
+    for line in lines:
+        print(line)
+    print(rule)
 
 
 def main(argv: list[str] | None = None) -> int:

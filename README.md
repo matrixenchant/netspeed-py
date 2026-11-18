@@ -11,7 +11,7 @@ HTTP(S)-запросов к указанному адресу, дожидает�
 
 ```bash
 git clone https://github.com/matrixenchant/netspeed-py
-cd netspeed
+cd netspeed-py
 python netspeed.py https://proof.ovh.net/files/10Mb.dat
 ```
 
@@ -52,29 +52,36 @@ python netspeed.py [-h] [--test] [-n COUNT] [-t TIMEOUT] [--max-time MAX_TIME]
 [ 3/10] ███████████████░░░░░░░░░░░░░░░  52%    5.45/10.49 MB    47.12 Mbit/s
 ```
 
-После завершения запроса она заменяется итогом, а в конце печатаются сводка и график:
+После завершения запроса она заменяется итогом. Затем печатается блок `Diagnostics` с деталями
+и график, а **в самом конце, отдельно в рамке — результат**: скорость скачивания, среднее время
+запроса и общий объём:
 
 ```
 URL:      https://proof.ovh.net/files/10Mb.dat
 Requests: 3
 
-[1/3]   10.49 MB    2.477 s  (TTFB  0.545 s)     33.86 Mbit/s
-[2/3]   10.49 MB    1.538 s  (TTFB  0.387 s)     54.56 Mbit/s
-[3/3]   10.49 MB    1.573 s  (TTFB  0.389 s)     53.31 Mbit/s
+[1/3]   10.49 MB    1.635 s  (TTFB  0.429 s)     51.29 Mbit/s
+[2/3]   10.49 MB    1.675 s  (TTFB  0.396 s)     50.09 Mbit/s
+[3/3]   10.49 MB    1.496 s  (TTFB  0.389 s)     56.07 Mbit/s
 
-Content type:        binary file (application/octet-stream)
-Successful requests: 3/3
-Request time:        avg 1.863 s  (min 1.538 / median 1.573 / max 2.477)
-Average TTFB:        0.441 s
-Total downloaded:    31.46 MB (31457280 bytes)
-Download speed:      45.03 Mbit/s (5.63 MB/s)
-Speed per request:   median 53.31 Mbit/s  (min 33.86 / max 54.56)
-Transfer speed:      58.98 Mbit/s (excluding TTFB)
+Diagnostics:
+  Successful requests: 3/3
+  Content type:        binary file (application/octet-stream)
+  Request time:        min 1.496 / median 1.635 / max 1.675 s
+  Average TTFB:        0.404 s
+  Speed per request:   median 51.29 / min 50.09 / max 56.07 Mbit/s
+  Transfer speed:      70.04 Mbit/s (excluding TTFB)
 
-Speed per request, Mbit/s (overall 45.03):
-  1 │█████████████████████████                   33.86
-  2 │████████████████████████████████████████    54.56
-  3 │███████████████████████████████████████     53.31
+Speed per request, Mbit/s (overall 52.36):
+  1 │█████████████████████████████████████       51.29
+  2 │████████████████████████████████████        50.09
+  3 │████████████████████████████████████████    56.07
+
+════════════════════════════════════════════
+DOWNLOAD SPEED:    52.36 Mbit/s  (6.54 MB/s)
+Avg request time:  1.602 s
+Total downloaded:  31.46 MB (31457280 bytes)
+════════════════════════════════════════════
 ```
 
 - Прогресс-бар рисуется, только если вывод идёт в терминал. При перенаправлении в файл или пайп
@@ -83,7 +90,7 @@ Speed per request, Mbit/s (overall 45.03):
 - Если консоль не умеет выводить псевдографику (например, cp1251 в пайпе на Windows),
   бары рисуются ASCII-символами `#` и `.`.
 - Длина столбца графика пропорциональна скорости запроса, самый быстрый запрос получает полную
-  ширину. `overall` в подписи — это итоговая `Download speed`, а не среднее по столбцам.
+  ширину. `overall` в подписи — это итоговая `DOWNLOAD SPEED`, а не среднее по столбцам.
 
 ## Тип контента
 
@@ -116,10 +123,10 @@ Speed per request, Mbit/s (overall 45.03):
   (`Accept-Encoding: gzip` не отправляется), поэтому посчитанные байты — это реально пришедшие
   по сети данные тела. Если тело пришло не полностью (меньше `Content-Length`), запрос считается
   ошибкой.
-- **Download speed** (основной результат) = весь скачанный объём / суммарное время запросов ×
+- **DOWNLOAD SPEED** (основной результат) = весь скачанный объём / суммарное время запросов ×
   8 / 10⁶. Это «скорость с точки зрения пользователя», вместе с рукопожатиями.
 - **Transfer speed** — то же, но из времени вычтен TTFB: скорость передачи самого тела.
-  На маленьких файлах разница с `Download speed` большая, поэтому для замера берите файл от 10 МБ.
+  На маленьких файлах разница с `DOWNLOAD SPEED` большая, поэтому для замера берите файл от 10 МБ.
 - **Request time / Speed per request** — среднее, минимум, медиана и максимум по успешным
   запросам. Медиана устойчива к одной случайно медленной попытке, которая искажает среднее.
 - Ответ читается потоково (`read1`, до 64 КиБ за раз), поэтому большие файлы не держатся в памяти.
